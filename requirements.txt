@@ -1,0 +1,6 @@
+cloudscraper
+pandas
+selenium
+webdriver_manager
+undetected-chromedriver
+json
