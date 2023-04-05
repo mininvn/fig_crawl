@@ -19,7 +19,7 @@ driver = uc.Chrome(options=options, service=chrome_service)
 driver.implicitly_wait(5)
 def crawl(url):
     driver.get(url) 
-    time.sleep(5)
+    time.sleep(10)
     item_about = driver.find_elements(By.CLASS_NAME, value = "item-about")[0]
     item_data_dls = item_about.find_elements(By.TAG_NAME, value = "dl")
     res = {}
@@ -75,11 +75,17 @@ def produce_headings(obj):
 def handle_price(data):
     return data.replace(",", ".")
 
+def handle_scale(data):
+    return "Scale" + data
+
 def convert_res_to_csv_row(res):
     csv_row = ""
 
     handle_rows = {
-        "List Price": handle_price
+        "List Price": handle_price,
+        "Specifications": {
+            "Scale": handle_scale
+        }
     }
 
     for key, value in required_rows.items():
@@ -94,6 +100,8 @@ def convert_res_to_csv_row(res):
             for key_inside, value_inside in value.items():
                 if (value_inside == True):
                     data = res[key][key_inside]
+                    if (key_inside in handle_rows[key]):
+                        data = handle_rows[key][key_inside](data)
                     data = data.strip()
                     csv_row += data
                     csv_row += ","
@@ -147,8 +155,9 @@ def handle_urls(urls):
     failed_urls = []
     for url in urls:
         if not validate_url(url):
-            failed_urls.append(url)
-            print("Invalid url:", url)
+            if (not (url.strip() == "")):
+                failed_urls.append(url)
+                print("Invalid url:", url)
             continue
         res = crawl(url)
         if (not handle_url(res)):
